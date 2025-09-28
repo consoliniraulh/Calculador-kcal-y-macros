@@ -3,7 +3,6 @@ import plotly.express as px
 import pandas as pd
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
-from reportlab.lib.units import inch
 from io import BytesIO
 
 # Título y descripción
@@ -114,7 +113,6 @@ with st.form("calorie_form"):
 
 # Lógica de cálculo
 if submit_button:
-    # Validar entradas
     if weight <= 0 or height <= 0 or age < 0:
         st.error("Por favor, ingresa valores válidos para peso, altura y edad.")
     else:
@@ -130,7 +128,11 @@ if submit_button:
             else:
                 tmb = (13.384 if sex == "Mujer" else 17.686) * weight + (692.6 if sex == "Mujer" else 658.2) * (height / 100) + (112.8 if sex == "Mujer" else 15.1)
         else:
-            tmb = (447.593 if sex == "Mujer" else 88.362) + (9.247 if sex == "Mujer" else 13.397) * weight + (3.098 if sex == "Mujer" else 4.799) * height - (4.330 if sex == "Mujer" else 5.677) * age
+            # Fórmula Mifflin-St Jeor para adultos
+            if sex == "Mujer":
+                tmb = (10 * weight) + (6.25 * height) - (5 * age) - 161
+            else:
+                tmb = (10 * weight) + (6.25 * height) - (5 * age) + 5
 
         # Calorías totales
         calories = tmb * activity_factors[activity_level]
