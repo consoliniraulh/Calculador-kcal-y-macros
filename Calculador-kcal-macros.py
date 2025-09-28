@@ -13,10 +13,12 @@ st.markdown("Ingresa tus datos para calcular tus necesidades calóricas y macron
 
 # Cargar la base de datos de alimentos desde foods.csv
 try:
-    food_database = pd.read_csv("foods.csv")
-    food_database = food_database.set_index("food").to_dict(orient="index")
+    food_database = pd.read_csv("foods.csv", encoding="utf-8")
 except FileNotFoundError:
     st.error("El archivo 'foods.csv' no se encuentra en el directorio del proyecto. Por favor, asegúrate de incluirlo.")
+    st.stop()
+except pd.errors.ParserError as e:
+    st.error(f"Error al leer 'foods.csv': {e}. Verifica el formato del archivo (debe usar comas como separadores y tener 5 columnas: food,kcal,protein,carb,fat).")
     st.stop()
 
 # Función para generar sugerencias de comidas
@@ -25,34 +27,37 @@ def suggest_meal(calories, protein, carb, fat):
     remaining_calories, remaining_protein, remaining_carb, remaining_fat = calories, protein, carb, fat
     
     # Priorizar una fuente de proteína
-    protein_foods = [f for f, v in food_database.items() if v["protein"] > 10]
+    protein_foods = food_database[food_database["protein"] > 10]["food"].tolist()
     for food in protein_foods:
         if remaining_protein > 0:
-            grams = min(100, remaining_protein * 100 / food_database[food]["protein"])
+            food_data = food_database[food_database["food"] == food].iloc[0]
+            grams = min(100, remaining_protein * 100 / food_data["protein"])
             meal_suggestion.append(f"{grams:.1f} g de {food}")
-            remaining_calories -= grams * food_database[food]["kcal"] / 100
-            remaining_protein -= grams * food_database[food]["protein"] / 100
-            remaining_carb -= grams * food_database[food]["carb"] / 100
-            remaining_fat -= grams * food_database[food]["fat"] / 100
+            remaining_calories -= grams * food_data["kcal"] / 100
+            remaining_protein -= grams * food_data["protein"] / 100
+            remaining_carb -= grams * food_data["carb"] / 100
+            remaining_fat -= grams * food_data["fat"] / 100
             break
     
     # Agregar carbohidratos
-    carb_foods = [f for f, v in food_database.items() if v["carb"] > 10]
+    carb_foods = food_database[food_database["carb"] > 10]["food"].tolist()
     for food in carb_foods:
         if remaining_carb > 0 and remaining_calories > 0:
-            grams = min(100, remaining_carb * 100 / food_database[food]["carb"])
+            food_data = food_database[food_database["food"] == food].iloc[0]
+            grams = min(100, remaining_carb * 100 / food_data["carb"])
             meal_suggestion.append(f"{grams:.1f} g de {food}")
-            remaining_calories -= grams * food_database[food]["kcal"] / 100
-            remaining_protein -= grams * food_database[food]["protein"] / 100
-            remaining_carb -= grams * food_database[food]["carb"] / 100
-            remaining_fat -= grams * food_database[food]["fat"] / 100
+            remaining_calories -= grams * food_data["kcal"] / 100
+            remaining_protein -= grams * food_data["protein"] / 100
+            remaining_carb -= grams * food_data["carb"] / 100
+            remaining_fat -= grams * food_data["fat"] / 100
             break
     
     # Agregar grasas
-    fat_foods = [f for f, v in food_database.items() if v["fat"] > 10]
+    fat_foods = food_database[food_database["fat"] > 10]["food"].tolist()
     for food in fat_foods:
         if remaining_fat > 0 and remaining_calories > 0:
-            grams = min(20, remaining_fat * 100 / food_database[food]["fat"])
+            food_data = food_database[food_database["food"] == food].iloc[0]
+            grams = min(20, remaining_fat * 100 / food_data["fat"])
             meal_suggestion.append(f"{grams:.1f} g de {food}")
             break
     
