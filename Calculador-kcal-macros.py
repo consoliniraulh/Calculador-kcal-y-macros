@@ -5,24 +5,19 @@ from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 from reportlab.lib.units import inch
 from io import BytesIO
+import os
 
 # Título y descripción
 st.title("Calculadora de Calorías y Macronutrientes")
 st.markdown("Ingresa tus datos para calcular tus necesidades calóricas y macronutrientes según tus objetivos.")
 
-# Base de datos de alimentos (kcal, proteínas, carbohidratos, grasas por 100 g)
-food_database = {
-    "Pollo (pechuga)": {"kcal": 165, "protein": 31, "carb": 0, "fat": 3.6},
-    "Arroz blanco": {"kcal": 130, "protein": 2.7, "carb": 28, "fat": 0.3},
-    "Aguacate": {"kcal": 160, "protein": 2, "carb": 9, "fat": 15},
-    "Huevo cocido": {"kcal": 155, "protein": 13, "carb": 1.1, "fat": 11},
-    "Yogur natural (entero)": {"kcal": 61, "protein": 3.5, "carb": 4.7, "fat": 3.3},
-    "Mantequilla de maní": {"kcal": 588, "protein": 25, "carb": 20, "fat": 50},
-    "Plátano": {"kcal": 89, "protein": 1.1, "carb": 23, "fat": 0.3},
-    "Brócoli": {"kcal": 35, "protein": 2.8, "carb": 7, "fat": 0.4},
-    "Aceite de oliva": {"kcal": 884, "protein": 0, "carb": 0, "fat": 100},
-    "Pan integral": {"kcal": 247, "protein": 9, "carb": 41, "fat": 3.5},
-}
+# Cargar la base de datos de alimentos desde foods.csv
+try:
+    food_database = pd.read_csv("foods.csv")
+    food_database = food_database.set_index("food").to_dict(orient="index")
+except FileNotFoundError:
+    st.error("El archivo 'foods.csv' no se encuentra en el directorio del proyecto. Por favor, asegúrate de incluirlo.")
+    st.stop()
 
 # Función para generar sugerencias de comidas
 def suggest_meal(calories, protein, carb, fat):
